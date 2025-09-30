@@ -15,7 +15,6 @@ class UserCreate(UserBase):
 # ユーザー情報（レスポンス）
 class User(UserBase):
     """データベースから取得したユーザー情報 (パスワードなどは含まない)"""
-    # 🚨 変更推奨: SupabaseのユーザーID (UUID) に合わせ、型をstrに変更
     id: str 
     is_active: bool = True
 

@@ -9,3 +9,8 @@ pydantic-settings
 # テスト用
 pytest
 httpx # FastAPIのTestClientが内部で使用
+
+# supabase
+supabase
+# psycopg2
+# python-dotenv

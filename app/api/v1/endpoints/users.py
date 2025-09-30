@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 
 # 自身のプロジェクトからインポート
-from app.api.v1.schemas.user import User, PasswordChange # PasswordChangeはここでは使用しない
+from app.api.v1.schemas.user import User
 from app.core.security import get_current_active_user # 依存性注入で認証済みユーザーを取得
 
 router = APIRouter(prefix="/users", tags=["Users"])

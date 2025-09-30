@@ -1,7 +1,5 @@
-from typing import Optional
-
 from fastapi import Depends, HTTPException, status
-# ユーザー認証がフロントエンドとSupabaseで完結するため、OAuth2PasswordBearerの代わりにOAuth2BearerTokenを使用
+# 認証はSupabaseに委譲するが、トークン抽出のためにOAuth2PasswordBearerを使用
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from pydantic import ValidationError
@@ -26,9 +24,6 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> User:
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    # ⚠️ 既存のUserスキーマのIDはintですが、SupabaseのユーザーIDはUUID(str)です。
-    # ここでは、DBマネージャがUUIDを受け取れる、またはDBにUUIDフィールドがあることを前提とします。
-    
     try:
         # JWTを複合（SupabaseのシークレットキーとHS256アルゴリズムを使用）
         payload = jwt.decode(
@@ -50,8 +45,6 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> User:
         raise credentials_exception
     
     # DBからユーザー情報を取得
-    # 🚨 db_managerにUUIDで検索する関数が必要です 🚨
-    # ハッカソンでは、内部ユーザーテーブルの外部キーとしてUUIDを持つのがシンプルです
     user = db_manager.get_user_by_uuid(user_uuid)
     
     if user is None:
@@ -62,10 +55,3 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> User:
         )
         
     return user
-
-# 🚨 以下のローカル認証ロジックは全て削除されます 🚨
-# def verify_password(...): ... (削除)
-# def get_password_hash(...): ... (削除)
-# def create_access_token(...): ... (削除)
-# def authenticate_user(...): ... (削除)
-# def change_user_password(...): ... (削除)
