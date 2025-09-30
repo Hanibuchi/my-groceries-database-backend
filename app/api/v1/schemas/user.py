@@ -15,11 +15,11 @@ class UserCreate(UserBase):
 # ユーザー情報（レスポンス）
 class User(UserBase):
     """データベースから取得したユーザー情報 (パスワードなどは含まない)"""
-    id: int
+    # 🚨 変更推奨: SupabaseのユーザーID (UUID) に合わせ、型をstrに変更
+    id: str 
     is_active: bool = True
 
     class Config:
-        # PydanticがORMモデル (例: SQLAlchemy) からデータを読み込むことを許可する
         from_attributes = True
 
 # 認証トークン（レスポンス）

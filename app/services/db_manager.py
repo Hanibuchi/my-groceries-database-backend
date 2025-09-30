@@ -8,6 +8,10 @@ def create_access_token(data: dict) -> str:
     """JWTトークンを生成する"""
     return "access_token"
 
+def get_user_by_uuid(user_uuid: str):
+    """UUIDでユーザーを取得する"""
+    pass
+
 
 # ---- 履歴管理 ----
 def get_records_by_item_id(user_id, item_id):

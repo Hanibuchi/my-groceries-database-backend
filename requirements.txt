@@ -1,0 +1,11 @@
+
+fastapi
+uvicorn
+
+# 認証・JWT処理のために追加
+python-jose[cryptography]
+pydantic-settings
+
+# テスト用
+pytest
+httpx # FastAPIのTestClientが内部で使用
