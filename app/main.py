@@ -5,7 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 import uvicorn
 
 # 自身のプロジェクトからインポート
-from app.api.v1.api import api_router # v1/api.py でルーターを統合することを想定
+from app.api.v1 import api_router # v1/api.py でルーターを統合することを想定
 from app.core.config import settings
 
 # --- FastAPI アプリケーションのインスタンス化 ---
