@@ -35,7 +35,7 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> User:
         )
         
         # SupabaseのJWTペイロードからユーザーID（subクレーム）を抽出
-        user_uuid: str = payload.get("sub") 
+        user_uuid = payload.get("sub") 
         if user_uuid is None:
             raise credentials_exception
             

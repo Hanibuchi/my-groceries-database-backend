@@ -19,9 +19,10 @@ def suggest_items(user_id: str, query: str) -> List[Item]:
     
     # 必要に応じて、類似度スコアでソートしたり、上位N件に絞ることも可能
     # return suggestions[:10]  # 上位10件を返す例
+    return []
     
 def suggest_stores(user_id: str, query: str) -> List[Store]:
     """
     ユーザーIDと入力クエリに基づいて、既存の店舗名からサジェストリストを返す
     """
-    pass
+    return []

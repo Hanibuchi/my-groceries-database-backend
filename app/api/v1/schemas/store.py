@@ -5,7 +5,7 @@ from typing import Optional
 # 共通ベーススキーマ
 class StoreBase(BaseModel):
     """店舗の基本的な情報"""
-    name: str = Field(..., max_length=100)
+    name: str = Field(..., max_length=255)
 
 # 店舗登録（リクエスト）
 class StoreCreate(StoreBase):

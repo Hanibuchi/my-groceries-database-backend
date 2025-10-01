@@ -43,6 +43,12 @@ def create_purchase_record(user_id, record_in: RecordCreate):
 def get_records_by_item_id(user_id, item_id):
     return []
 
+def update_record(user_id, record_id, record_in: Record):
+    pass
+
+def delete_record(user_id, record_id):
+    pass
+
 def get_item_price_comparisons(user_id: str, item_id: int):
     """(test_get_price_comparison_success 用) 価格比較データの取得"""
     return []
@@ -79,3 +85,13 @@ def export_user_data_to_csv(user_id: str):
     """(test_export_data_success 用) データエクスポート"""
     # テストでは一時ファイルパスを返すと想定
     return "temp_export.csv" 
+
+def delete_all_user_data(user_id: str) -> bool:
+    """
+    ユーザーIDに紐づく全てのデータ（商品、購入履歴、店舗など）を削除する。
+    """
+    # ... 実際のDB操作ロジック ...
+    
+    # ハッカソン用スタブ: 常に成功を返す
+    print(f"All internal data deleted for UUID: {user_id}")
+    return True
