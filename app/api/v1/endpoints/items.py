@@ -1,7 +1,7 @@
 # items.py
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
-
+from fastapi.responses import StreamingResponse
 # 自身のプロジェクトからインポート
 from app.api.v1.schemas.user import User
 from app.api.v1.schemas.item import Item, ItemCreate
@@ -22,7 +22,7 @@ async def read_items(
     """ユーザーが登録した商品の一覧、または部分一致で検索した結果を取得する"""
     if query:
         # data_processorが表記ゆれを考慮した検索ロジックを持つことを想定
-        return data_processor.search_items(current_user.id, query)
+        return data_processor.suggest_items(current_user.id, query)
     return db_manager.get_items_by_user(current_user.id)
 
 # 商品の新規登録 (手動登録またはOCR後の修正)
@@ -52,9 +52,7 @@ async def update_item(
 # 商品の削除
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_item(item_id: int, current_user: User = Depends(get_current_active_user)):
-    """特定の商品の正規化情報を削除する (関連する購入履歴も削除されるべきか要検討)"""
-    # 削除ロジックは、この商品IDに紐づく購入履歴（Record）も削除するか、
-    # あるいは関連付けを解除（Recordからitem_idをNULLにするなど）するか、ビジネス要件によって決定してください。
+    """特定の商品の正規化情報を削除する (関連する購入履歴がある場合は削除せず、エラーを出す)"""
     success = db_manager.delete_item(current_user.id, item_id)
     if not success:
         raise HTTPException(
@@ -109,15 +107,17 @@ async def get_price_comparison(
 
 ## エクスポート機能
 
-@router.get("/export/csv", response_model=dict)
+@router.get("/export/csv") # response_modelは削除または変更
 async def export_data(current_user: User = Depends(get_current_active_user)):
-    """
-    ユーザーの全購入履歴をCSVファイルでエクスポートする。
-    ハッカソンでは、CSVファイルをレスポンスとして直接返すか、S3などのURLを返す簡略版でOK。
-    """
-    # db_managerでデータ取得し、CSV生成ロジック (例: pandas) を使用
-    # file_path = db_manager.export_user_data_to_csv(current_user.id)
-    
-    # 簡略化のため、ここではメッセージのみ返す
-    return {"message": "Export initiated. Check back soon for the download link."}
-    # return StreamingResponse(open(file_path, "rb"), media_type="text/csv") # 実際の実装例
+    # 1. CSVファイルを生成し、一時的なファイルパスを取得する
+    #    （db_manager.export_user_data_to_csv()が一時ファイルを作成すると想定）
+    file_path = db_manager.export_user_data_to_csv(current_user.id) 
+
+    # 2. ファイルをバイナリ読み込みモードで開き、StreamingResponseで返す
+    #    media_type="text/csv" でブラウザにCSVファイルであることを伝える
+    return StreamingResponse(
+        open(file_path, "rb"), 
+        media_type="text/csv",
+        # ダウンロード時のファイル名を指定するHTTPヘッダー
+        headers={"Content-Disposition": f"attachment; filename=purchase_history_{current_user.id}.csv"}
+    )

@@ -16,7 +16,7 @@ class StoreCreate(StoreBase):
 class Store(StoreBase):
     """データベースから取得した店舗情報"""
     id: int
-    user_id: int  # どのユーザーが登録した店舗か
+    user_id: str  # どのユーザーが登録した店舗か
 
     class Config:
         from_attributes = True

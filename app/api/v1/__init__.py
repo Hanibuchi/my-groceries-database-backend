@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from .endpoints import auth, users, receipts, stores, items # 各エンドポイントファイルからルーターをインポート
+from .endpoints import users, receipts, stores, items # 各エンドポイントファイルからルーターをインポート
 
 # v1のメインルーターを定義
 api_router = APIRouter()

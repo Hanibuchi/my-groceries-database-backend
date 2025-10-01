@@ -24,10 +24,10 @@ async def upload_receipt_and_process(
     レシート画像をアップロードし、OCRにかけてデータを抽出し、正規化の提案を行う。
     結果をユーザーに確認・修正させるために、抽出されたすべての項目をList[OCRResult]として返す。
     """
-    if file.content_type not in ["image/jpeg", "image/png"]:
+    if file.content_type not in ["image/jpeg", "image/png", "image/heic", "image/heif"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid file format. Only JPEG and PNG are supported."
+            detail="Invalid file format. Only JPEG, PNG, HEIC, and HEIF are supported."
         )
 
     # 1. 画像データを読み込み

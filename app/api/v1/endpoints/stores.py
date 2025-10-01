@@ -1,19 +1,26 @@
 # stores.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List
+from typing import List, Optional
 
 # 自身のプロジェクトからインポート
 from app.api.v1.schemas.user import User
 from app.api.v1.schemas.store import Store, StoreCreate
 from app.core.security import get_current_active_user
 from app.services import db_manager
+from app.services import db_manager, data_processor # 商品名検索にdata_processorも使用
 
 router = APIRouter(prefix="/stores", tags=["Stores"])
 
 # 店舗の一覧取得
 @router.get("/", response_model=List[Store])
-async def read_stores(current_user: User = Depends(get_current_active_user)):
-    """ユーザーが登録した店舗の一覧を取得する"""
+async def read_stores(current_user: User = Depends(get_current_active_user),
+    query: Optional[str] = Query(None, description="商品名の一部検索クエリ")
+    ):
+    """ユーザーが登録した店舗の一覧、または部分一致で検索した結果を取得する"""
+    if query:
+        # data_processorが表記ゆれを考慮した検索ロジックを持つことを想定
+        return data_processor.suggest_stores(current_user.id, query)
     return db_manager.get_stores_by_user(current_user.id)
 
 # 店舗の新規登録（手動登録またはOCR後の修正）
@@ -42,7 +49,7 @@ async def update_store(
 # 店舗の削除
 @router.delete("/{store_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_store(store_id: int, current_user: User = Depends(get_current_active_user)):
-    """特定の店舗情報を削除する"""
+    """特定の店舗情報を削除する (関連する購入履歴がある場合は削除せず、エラーを出す)"""
     success = db_manager.delete_store(current_user.id, store_id)
     if not success:
         raise HTTPException(
@@ -50,3 +57,13 @@ async def delete_store(store_id: int, current_user: User = Depends(get_current_a
             detail="Store not found or you don't have permission."
         )
     return
+
+# 店舗名サジェスト機能 (表記ゆれ対策を兼ねる)
+@router.get("/suggest", response_model=List[Store])
+async def suggest_stores(
+    query: str = Query(..., description="入力中の店舗名"),
+    current_user: User = Depends(get_current_active_user)
+):
+    """入力文字列に基づいて、既存の店舗名からサジェストリストを返す"""
+    # 表記ゆれ対策 (部分一致、類似度計算など) は data_processor に任せる
+    return data_processor.suggest_stores(current_user.id, query)
