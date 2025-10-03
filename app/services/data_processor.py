@@ -10,6 +10,8 @@ from app.services import db_manager
 
 # 類似度の閾値 (SIMILARITY_THRESHOLD点以上で既存と判定)
 SIMILARITY_THRESHOLD = 70.0
+# サジェストの上限数
+SUGGESTION_LIMIT = 10
 
 # --- ヘルパー関数 ---
 
@@ -99,6 +101,41 @@ def _normalize_name(
         return (True, None, raw_name)
 
 
+def _suggest_by_similarity(
+    user_id: str, query: str, existing_data_getter, entity_type
+) -> List:
+    """
+    商品・店舗サジェスト機能の共通ロジック。
+    類似度計算(WRatio)に基づき、スコアの高い順に上位 SUGGESTION_LIMIT 件を返す。
+    """
+    # DBから既存データを取得
+    all_entities = existing_data_getter(user_id)
+    query_lower = query.lower()
+
+    if not all_entities:
+        return []
+
+    scored_entities = []
+    for entity in all_entities:
+        # Item/Storeスキーマの name 属性を使用
+        existing_name = entity.name
+
+        # RapidFuzzによる類似度計算 (WRatioは単語の順序や長さの違いに強い)
+        score = fuzz.WRatio(query_lower, existing_name.lower())
+
+        # スコアとエンティティをタプルで保持
+        scored_entities.append((score, entity))
+
+    # スコアで降順ソート
+    scored_entities.sort(key=lambda x: x[0], reverse=True)
+
+    # 上位 SUGGESTION_LIMIT 件を抽出し、エンティティ本体のみを返す
+    # (SUGGESTION_LIMIT はコード冒頭で定義された定数)
+    suggestions = [entity for score, entity in scored_entities[:SUGGESTION_LIMIT]]
+
+    return suggestions
+
+
 # --- メインロジック ---
 
 
@@ -139,21 +176,17 @@ def normalize_ocr_data(
 
 def suggest_items(user_id: str, query: str) -> List[Item]:
     """
-    ユーザーIDと入力クエリに基づいて、既存の商品名からサジェストリストを返す
+    ユーザーIDと入力クエリに基づいて、既存の商品名からサジェストリストを返す。
+    類似度計算(WRatio)に基づき、スコアの高い順に上位10件を返す。
     """
-    # ここで部分一致や類似度計算などのロジックを実装
-    # 例えば、Levenshtein距離やTrigramマッチングなど
-    # 簡易的には、部分一致でフィルタリングするだけでも良いでしょう
-    # all_items = db_manager.get_items_by_user_id(user_id)
-    # suggestions = [item for item in all_items if query.lower() in item.normalized_name.lower()]
-
-    # 必要に応じて、類似度スコアでソートしたり、上位N件に絞ることも可能
-    # return suggestions[:10]  # 上位10件を返す例
-    return []
+    # 共通ロジック関数を呼び出し、既存商品取得関数と商品型を渡す
+    return _suggest_by_similarity(user_id, query, db_manager.get_items_by_user, Item)
 
 
 def suggest_stores(user_id: str, query: str) -> List[Store]:
     """
-    ユーザーIDと入力クエリに基づいて、既存の店舗名からサジェストリストを返す
+    ユーザーIDと入力クエリに基づいて、既存の店舗名からサジェストリストを返す。
+    類似度計算(WRatio)に基づき、スコアの高い順に上位10件を返す。
     """
-    return []
+    # 共通ロジック関数を呼び出し、既存店舗取得関数と店舗型を渡す
+    return _suggest_by_similarity(user_id, query, db_manager.get_stores_by_user, Store)
