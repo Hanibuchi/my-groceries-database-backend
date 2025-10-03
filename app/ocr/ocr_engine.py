@@ -7,13 +7,14 @@
 # [例]
 # raw_data_list = process_image(image_bytes)
 # raw_data_list = [
-#     {'store_name': 'イオンモール', 'item_name': '牛乳', 'price': 258.0, 'purchase_date': date(2025, 10, 1)},
-#     {'store_name': 'イオンモール', 'item_name': 'たまご 10個入', 'price': 320.0, 'purchase_date': date(2025, 10, 1)},
+#     {'store_name': 'イオンモール', 'item_name': '牛乳', 'price': 258.0, 'purchase_date': '2025/10/1'},
+#     {'store_name': 'イオンモール', 'item_name': 'たまご 10個入', 'price': 320.0, 'purchase_date': '2025年 10月1日'},
 #     ...
 # ]
 #
 # 抽出データがない場合 (OCR失敗時) は、空のリスト [] を返してください。
 
-def process_image(image_bytes: bytes): 
+
+def process_image(image_bytes: bytes):
     # ... 実際のOCRロジック ...
     return []

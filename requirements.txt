@@ -14,3 +14,6 @@ httpx # FastAPIのTestClientが内部で使用
 supabase
 # psycopg2
 # python-dotenv
+
+# OCR用
+rapidfuzz
