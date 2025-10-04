@@ -34,6 +34,8 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> User:
             options={"verify_signature": True, "verify_aud": False}
         )
         
+        print(f"✅ Token DECODE SUCCESS! User UUID (sub): {payload.get('sub')}")
+        
         # SupabaseのJWTペイロードからユーザーID（subクレーム）を抽出
         user_uuid = payload.get("sub") 
         if user_uuid is None:
