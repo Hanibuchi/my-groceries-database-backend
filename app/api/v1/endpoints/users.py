@@ -31,7 +31,7 @@ def register_user(
     ユーザーをSupabase Authに登録し、成功したら内部DBにレコードを作成する。
     """
     try:
-        # 1. Supabase Authにユーザーを登録（メール確認ステップがある可能性あり）
+        # 1. Supabase Authにユーザーを登録
         auth_response = supabase.auth.sign_up(
             email=user_in.email,
             password=user_in.password
@@ -39,25 +39,24 @@ def register_user(
         
         user_uuid = auth_response.user.id
         
-        # 2. 内部DBにユーザーのレコードを作成 (この部分はdb_managerに実装が必要です)
-        # 例：internal_user = db_manager.create_user_internal(user_uuid=user_uuid, email=user_in.email)
-        
-        # 要実装: 内部DBへの登録ロジック
-        # ユーザーに紐づく内部IDや初期設定を保存するため
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Registration is successful on Supabase, but internal DB creation logic (db_manager.create_user_internal) is missing."
+        # 2. 内部DB（メタデータ）にユーザーの初期レコードを作成
+        # 注: UserLoginスキーマにはusernameがないため、emailを暫定的にusernameとして使用
+        internal_user = db_manager.create_user_internal(
+            user_uuid=user_uuid, 
+            email=user_in.email,
+            # usernameは暫定的にemailを渡す (database.pyでメタデータに保存)
+            username=user_in.email 
         )
 
-        # return internal_user # 内部DBのユーザー情報を返す
-
+        # 登録が成功した内部DBのユーザー情報を返す
+        return internal_user 
+        
     except AuthApiError as e:
         # ユーザーがすでに存在する場合など
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Registration failed: {e.message}"
         )
-
 
 # 2. ログイン (Token Issuance)
 
