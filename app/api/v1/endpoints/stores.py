@@ -23,6 +23,21 @@ async def read_stores(current_user: User = Depends(get_current_active_user),
         return data_processor.suggest_stores(current_user.id, query)
     return db_manager.get_stores_by_user(current_user.id)
 
+# 店舗の詳細取得
+@router.get("/{store_id}", response_model=Store)
+async def read_store(store_id: int, current_user: User = Depends(get_current_active_user)):
+    """特定の店舗IDに基づいて詳細情報を取得する"""
+    
+    # db_managerに、IDとユーザーIDで店舗を取得する関数を呼び出す
+    store = db_manager.get_store_by_id_and_user(current_user.id, store_id)
+    
+    if not store:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Store not found or you don't have permission."
+        )
+    return store
+
 # 店舗の新規登録（手動登録またはOCR後の修正）
 @router.post("/", response_model=Store, status_code=status.HTTP_201_CREATED)
 async def create_store(store_in: StoreCreate, current_user: User = Depends(get_current_active_user)):
