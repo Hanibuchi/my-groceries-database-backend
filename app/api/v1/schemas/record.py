@@ -62,8 +62,15 @@ class RecordCreate(BaseModel):
     store_id: int
 
     # 最終的な購入データ
-    final_price: float = Field(..., gt=0)
-    final_purchase_date: date = Field(default_factory=date.today)
+    final_price: float = Field(..., gt=0, alias="price")
+    final_purchase_date: date = Field(default_factory=date.today, alias="purchase_date")
+
+    class Config:
+        # Pydantic v1, v2 両方でエイリアスを有効にするための設定
+        # フィールド名（final_price）で値を受け取っても、エイリアス（price）として扱えるようにする
+        allow_population_by_field_name = True
+        # 出力時（DBへの書き込み時）にエイリアスを使用する (Pydantic v2では不要だがv1では推奨)
+        populate_by_name = True
 
 
 # 購入履歴（レスポンス）
