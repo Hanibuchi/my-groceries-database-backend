@@ -12,6 +12,8 @@ from app.api.v1.schemas.item import Item, ItemCreate
 from app.api.v1.schemas.store import Store, StoreCreate
 from app.api.v1.schemas.record import Record, RecordCreate, PriceComparison
 
+from app.db import database # 専門職人(database.py)をインポート
+
 # Supabaseクライアントを初期化
 # settingsオブジェクトから安全にURLとキーを読み込みます
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
@@ -22,9 +24,33 @@ supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
 
 def create_user_internal(user_uuid: str, email: str, username: str) -> Optional[User]:
     """
-    Supabaseで認証された後のユーザーの内部DBレコードを初期登録する。
+    Supabaseで認証された後のユーザーの内部DBレコード(public.users)を初期登録する。
     """
-    pass
+    try:
+        response: APIResponse = supabase.table('users').insert({
+            "id": user_uuid,  # Supabase AuthのUUIDを主キーとして使用
+            "email": email,
+            "username": username
+        }).execute()
+
+        # 登録が成功したら、作成されたユーザー情報を返す
+        if response.data:
+            # response.dataはリストで返ってくるので、最初の要素を取り出す
+            return User(**response.data[0])
+        return None
+    except Exception as e:
+        print(f"Error creating internal user record: {e}")
+        return None
+
+def create_internal_user_record(user_uuid: str, email: str, username: str) -> Optional[User]:
+    """新しいユーザーの内部DBレコードを作成する。"""
+    # 専門職人(database)に、ユーザー作成の仕事を依頼する
+    return database.create_user_internal(
+        user_uuid=user_uuid, 
+        email=email, 
+        username=username
+    )
+
 
 
 def get_user_by_uuid(user_uuid: str) -> Optional[User]:
