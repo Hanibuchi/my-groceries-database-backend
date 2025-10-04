@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from datetime import date, datetime
+from typing import List
 
 # テスト対象のモジュールと依存関係のインポート
 # 🚨 プロジェクトのルートディレクトリをPYTHONPATHに追加する必要があります
