@@ -1,22 +1,27 @@
 from fastapi import Depends, HTTPException, status
-# 認証はSupabaseに委譲するが、トークン抽出のためにOAuth2PasswordBearerを使用
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
-from pydantic import ValidationError
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.core.config import settings
-from app.api.v1.schemas.user import User # 認証済みユーザーのレスポンスモデル
-from app.services import db_manager # DB操作サービスをインポート
+from app.api.v1.schemas.user import User
+# db_managerはもう不要になります
+# from app.services import db_manager
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="token",
-    scheme_name="JWT"
-)
+# Supabaseクライアントをインポート
+from supabase import create_client, Client
+
+bearer_scheme = HTTPBearer()
+
+# Supabaseクライアントを初期化
+supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
+
 
 # 🚨 Supabase JWT 検証と認可のメインロジック 🚨
-async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> User:
+def get_current_active_user(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> User:
     """
-    リクエストヘッダーからJWTを取得し、検証、ユーザーUUIDを抽出し、DBからユーザー情報を取得する
+    リクエストヘッダーからJWTを取得し、Supabaseに問い合わせてユーザー情報を検証し、
+    その情報から直接Userモデルを構築する。
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -24,36 +29,28 @@ async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> User:
         headers={"WWW-Authenticate": "Bearer"},
     )
     
+    token = credentials.credentials
+    
     try:
-        # JWTを複合（SupabaseのシークレットキーとHS256アルゴリズムを使用）
-        payload = jwt.decode(
-            token,
-            settings.SUPABASE_JWT_SECRET,
-            algorithms=["HS256"],
-            # aud (Audience) の検証はSupabaseの動作に合わせて柔軟に設定
-            options={"verify_signature": True, "verify_aud": False}
-        )
+        # Supabaseに「このトークンは本物ですか？」と直接問い合わせる
+        user_response = supabase.auth.get_user(token)
         
-        print(f"✅ Token DECODE SUCCESS! User UUID (sub): {payload.get('sub')}")
-        
-        # SupabaseのJWTペイロードからユーザーID（subクレーム）を抽出
-        user_uuid = payload.get("sub") 
-        if user_uuid is None:
+        if not user_response or not user_response.user:
             raise credentials_exception
-            
-    except (JWTError, ValidationError) as e:
-        # トークンの期限切れ、署名エラー、Pydanticの検証エラーなど
-        print(f"JWT Validation Error: {e}")
-        raise credentials_exception
-    
-    # DBからユーザー情報を取得
-    user = db_manager.get_user_by_uuid(user_uuid)
-    
-    if user is None:
-        # DBに紐づくユーザーがいない（認証は通ったが、内部DBに未登録など）
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User record not found in internal database."
-        )
+
+        auth_user = user_response.user
         
-    return user
+        # ▼▼▼【最重要修正】内部DBを見に行かず、Supabaseの応答から直接Userを構築▼▼▼
+        # これで、public.usersテーブルが不要になります。
+        user = User(
+            id=str(auth_user.id),
+            email=auth_user.email,
+            username=auth_user.user_metadata.get("username", auth_user.email),
+            is_active=True
+        )
+        return user
+            
+    except Exception as e:
+        # Supabaseからの応答がエラーだった場合など
+        print(f"Supabase Token Validation Error: {e}")
+        raise credentials_exception

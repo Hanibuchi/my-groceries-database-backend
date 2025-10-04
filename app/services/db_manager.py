@@ -10,9 +10,14 @@ from app.db import database
 
 # --- 1. ユーザー (User) 関連 ---
 
-# create_user_internalは現在の設計では不要なため、実装しない
-# def create_user_internal(...):
-#     pass
+def create_internal_user_record(user_uuid: str, email: str, username: str) -> Optional[User]:
+    """新しいユーザーの内部DBレコードを作成する。"""
+    # 専門職人(database)に、ユーザー作成の仕事を依頼する
+    return database.create_user_internal(
+        user_uuid=user_uuid, 
+        email=email, 
+        username=username
+    )
 
 def get_user_by_uuid(user_uuid: str) -> Optional[User]:
     """UUIDでユーザーを取得する"""
