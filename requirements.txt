@@ -24,3 +24,5 @@ pillow
 numpy
 jaconv
 
+# デプロイ用
+uvicorn
