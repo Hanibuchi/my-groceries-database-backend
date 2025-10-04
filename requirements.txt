@@ -17,3 +17,9 @@ supabase
 
 # OCR用
 rapidfuzz
+opencv-python
+pytesseract
+pillow
+numpy
+jaconv
+
