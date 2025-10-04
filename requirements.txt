@@ -12,6 +12,7 @@ httpx # FastAPIのTestClientが内部で使用
 
 # supabase
 supabase
+gotrue
 # psycopg2
 # python-dotenv
 
