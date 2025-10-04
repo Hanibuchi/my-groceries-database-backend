@@ -12,7 +12,7 @@ from app.db import database
 # 以下のテストを実行するには、database.pyが正しくSupabaseに接続できる状態である必要があります。
 # また、テスト用に確保したユーザーID (UUID) が必要です。
 
-TEST_USER_ID = "55902d4d-fbb1-4454-afba-c41c4af70009"  # 実際のUUIDに置き換えること
+TEST_USER_ID = "f405c50e-824a-4508-9218-571bba692713"  # 実際のUUIDに置き換えること
 # 例: TEST_USER_ID = "00000000-0000-0000-0000-000000000001"
 
 
