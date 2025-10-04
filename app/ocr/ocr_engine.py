@@ -5,6 +5,7 @@ import re
 from dotenv import dotenv_values
 import os
 
+
 config = dotenv_values("app/ocr/.env")
 endpoint = config.get("ENDPOINT")
 key = config.get("KEY")
@@ -165,14 +166,18 @@ def parse_receipt_text(text):
         i += 1
     return items
 
-if __name__ == "__main__":
-    result_json = azure_receipt_ocr("app/ocr/receipt_sample.jpg")
+def process_image(image_path):
+    """
+    入力画像パスを受け取り、商品リストを抽出して返す関数
+    """
+    result_json = azure_receipt_ocr(image_path)
     result = parse_receipt_result(result_json)
-
-    # print("=== 生データ ===")
-    # print(result.get("生データ", ""))
-
-    # ここを修正
     raw_data_list = parse_receipt_text(result.get("生データ", ""))
-    for d in raw_data_list:
+    return raw_data_list
+
+# 使い方例
+if __name__ == "__main__":
+    items = process_image("app/ocr/receipt_sample.jpg")
+    for d in items:
         print(d)
+
