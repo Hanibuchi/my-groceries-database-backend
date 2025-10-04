@@ -82,8 +82,8 @@ def test_upload_receipt_and_process_success(
     mock_raw_data = {
         "store_name": "ファミマ",
         "item_name": "牛乳パック",
-        "price": 240.0,
-        "purchase_date": date.today().isoformat(),
+        "price": "240.0",
+        "purchase_date": str(date.today().isoformat()),
     }
     mock_process_image.return_value = [mock_raw_data]
 
@@ -91,14 +91,18 @@ def test_upload_receipt_and_process_success(
     mock_normalize.return_value = {
         "raw_item_name": "牛乳パック",
         "raw_store_name": "ファミマ",
-        "raw_price": 240.0,
-        "raw_purchase_date": date.today().isoformat(),  # dateをisoformat文字列に変更
+        "raw_price": "240.0",
+        "raw_purchase_date": str(
+            date.today().isoformat()
+        ),  # dateをisoformat文字列に変更
         "is_new_item": False,
         "suggested_item_id": 101,
         "suggested_item_name": "牛乳",
         "is_new_store": False,
         "suggested_store_id": 201,
         "suggested_store_name": "ファミリーマート",
+        "price": 240.0,
+        "purchase_date": date.today().isoformat(),
     }
 
     files = {"file": ("receipt.jpg", DUMMY_IMAGE_BYTES, "image/jpeg")}
@@ -121,8 +125,8 @@ def test_confirm_and_register_record_success(mock_create_record):
     mock_record_in = RecordCreate(
         raw_item_name="牛乳パック",
         raw_store_name="ファミマ",
-        raw_price=240.0,
-        raw_purchase_date=date.today(),
+        raw_price="240.0",
+        raw_purchase_date=str(date.today()),
         item_id=101,
         store_id=201,
         final_price=240.0,

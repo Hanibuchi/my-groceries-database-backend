@@ -21,8 +21,6 @@ def _normalize_date(date_input) -> date:
     様々な形式の日付文字列（例: '2025/10/1', '2025年 10月1日'）を YYYY-MM-DD 形式の date オブジェクトに変換する。
     変換できない場合は、本日の日付を返す。
     """
-    if date_input is None:
-        return date.today()
 
     date_str = str(date_input).strip()
 
@@ -56,6 +54,40 @@ def _normalize_date(date_input) -> date:
         pass
 
     return date.today()  # どの形式にも一致しない場合は本日の日付
+
+
+def _normalize_price(s: str) -> float:
+    s = str(s)
+    # 前後の空白除去
+    s = s.strip()
+
+    # 先頭が '\' の場合は削除
+    if s.startswith("\\"):
+        s = s[1:]
+
+    # 末尾が '円' または 'yen' の場合は削除
+    if s.endswith("円"):
+        s = s[:-1]
+    elif s.lower().endswith("yen"):
+        s = s[:-3]
+
+    # 余計な空白削除
+    s = s.strip()
+
+    # 数字以外の文字は '0' に置換
+    cleaned = []
+    for ch in s:
+        if ch.isdigit() or ch == "." or ch in "+-":
+            cleaned.append(ch)
+        else:
+            cleaned.append("0")
+
+    cleaned_str = "".join(cleaned)
+
+    try:
+        return float(cleaned_str)
+    except ValueError:
+        return 0.0
 
 
 def _normalize_name(
@@ -140,37 +172,49 @@ def _suggest_by_similarity(
 
 
 def normalize_ocr_data(
-    user_id: str, raw_store_name: str, raw_item_name: str, price: float, purchase_date
+    user_id: str,
+    raw_store_name: str,
+    raw_item_name: str,
+    raw_price: str,
+    raw_purchase_date: str | None,
 ) -> OCRResult:
     """
     OCR抽出データを正規化し、名寄せ結果（提案）を含むOCRResultスキーマを返す。
     """
-    # 1. 日付の正規化
-    normalized_date = _normalize_date(purchase_date)
+    if raw_purchase_date is None:
+        raw_purchase_date = ""
+    # 日付の正規化
+    normalized_date = _normalize_date(raw_purchase_date)
 
-    # 2. 店舗名の名寄せ
+    raw_price = str(raw_price)
+    # 価格の正規化
+    normalized_price = _normalize_price(raw_price)
+
+    # 店舗名の名寄せ
     (is_new_store, suggested_store_id, suggested_store_name) = _normalize_name(
         user_id, raw_store_name, db_manager.get_stores_by_user  # 既存店舗取得関数
     )
 
-    # 3. 商品名の名寄せ
+    # 商品名の名寄せ
     (is_new_item, suggested_item_id, suggested_item_name) = _normalize_name(
         user_id, raw_item_name, db_manager.get_items_by_user  # 既存商品取得関数
     )
 
-    # 4. OCRResult スキーマの構築
+    # OCRResult スキーマの構築
     # raw_priceはfloatで、raw_purchase_dateはdateオブジェクト
     return OCRResult(
         raw_item_name=raw_item_name,
         raw_store_name=raw_store_name,
-        raw_price=price,
-        raw_purchase_date=normalized_date,  # YYYY-MM-DD形式のdateオブジェクト
+        raw_price=raw_price,
+        raw_purchase_date=raw_purchase_date,  # YYYY-MM-DD形式のdateオブジェクト
         is_new_item=is_new_item,
         suggested_item_id=suggested_item_id,
         suggested_item_name=suggested_item_name,
         is_new_store=is_new_store,
         suggested_store_id=suggested_store_id,
         suggested_store_name=suggested_store_name,
+        price=normalized_price,
+        purchase_date=normalized_date,
     )
 
 

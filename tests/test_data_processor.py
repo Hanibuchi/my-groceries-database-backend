@@ -55,14 +55,14 @@ class TestNormalizeOCRData(unittest.TestCase):
 
     def test_successful_name_matching(self, mock_get_stores, mock_get_items):
         """
-        類似度が高い（閾値90以上）場合に、既存のIDと名称が提案されることを確認
+        類似度が高い場合に、既存のIDと名称が提案されることを確認
         """
         # --- テストデータ ---
         raw_item_name = (
             "ポテトチップ うす塩"  # 既存の 'ポテトチップスうすしお味' に高類似
         )
         raw_store_name = "イオンモール（仮）"  # 既存の 'イオンモール' に高類似
-        raw_price = 150.0
+        raw_price = "150.0"
         raw_date = "2024/05/15"
 
         # --- 実行 ---
@@ -70,8 +70,8 @@ class TestNormalizeOCRData(unittest.TestCase):
             user_id=self.user_id,
             raw_store_name=raw_store_name,
             raw_item_name=raw_item_name,
-            price=raw_price,
-            purchase_date=raw_date,
+            raw_price=str(raw_price),
+            raw_purchase_date=raw_date,
         )
 
         # --- 検証 ---
@@ -101,18 +101,18 @@ class TestNormalizeOCRData(unittest.TestCase):
 
         # 3. 日付の正規化
         self.assertEqual(
-            result.raw_purchase_date, date(2024, 5, 15), "日付が正しく正規化されるべき"
+            result.purchase_date, date(2024, 5, 15), "日付が正しく正規化されるべき"
         )
-        self.assertEqual(result.raw_price, 150.0)
+        self.assertEqual(result.price, 150.0)
 
     def test_new_entity_detection(self, mock_get_stores, mock_get_items):
         """
-        類似度が低い（閾値90未満）場合に、新規として登録が提案されることを確認
+        類似度が低い場合に、新規として登録が提案されることを確認
         """
         # --- テストデータ ---
         raw_item_name = "超高級キャビア"  # 既存商品と低類似度
         raw_store_name = "個人商店田中"  # 既存店舗と低類似度
-        raw_price = 10000.0
+        raw_price = "10000円"
         raw_date = "2024年12月25日"
 
         # --- 実行 ---
@@ -120,8 +120,8 @@ class TestNormalizeOCRData(unittest.TestCase):
             user_id=self.user_id,
             raw_store_name=raw_store_name,
             raw_item_name=raw_item_name,
-            price=raw_price,
-            purchase_date=raw_date,
+            raw_price=raw_price,
+            raw_purchase_date=raw_date,
         )
 
         # --- 検証 ---
@@ -145,7 +145,7 @@ class TestNormalizeOCRData(unittest.TestCase):
 
         # 3. 日付の正規化 (日本語形式)
         self.assertEqual(
-            result.raw_purchase_date,
+            result.purchase_date,
             date(2024, 12, 25),
             "日本語の日付が正しく正規化されるべき",
         )
@@ -171,11 +171,11 @@ class TestNormalizeOCRData(unittest.TestCase):
                     user_id=self.user_id,
                     raw_store_name="ダミー",
                     raw_item_name="ダミー",
-                    price=1.0,
-                    purchase_date=raw_date,
+                    raw_price="1.0",
+                    raw_purchase_date=raw_date,
                 )
                 self.assertEqual(
-                    result.raw_purchase_date,
+                    result.purchase_date,
                     expected_date,
                     f"日付 '{raw_date}' の正規化に失敗",
                 )
@@ -186,11 +186,11 @@ class TestNormalizeOCRData(unittest.TestCase):
             user_id=self.user_id,
             raw_store_name="ダミー",
             raw_item_name="ダミー",
-            price=1.0,
-            purchase_date=raw_date_fail,
+            raw_price="1.0",
+            raw_purchase_date=raw_date_fail,
         )
         self.assertEqual(
-            result_fail.raw_purchase_date,
+            result_fail.purchase_date,
             date.today(),
             "不正な日付は今日の日付になるべき",
         )
