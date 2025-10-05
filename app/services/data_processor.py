@@ -91,7 +91,7 @@ def _normalize_price(s: str) -> float:
 
 
 def _normalize_name(
-    user_id: str, raw_name: str, existing_data_getter
+    user_id: str, raw_name: Optional[str], existing_data_getter
 ) -> Tuple[bool, Optional[int], Optional[str]]:
     """
     商品名または店舗名の名寄せ処理を実行し、結果を返す。
@@ -100,6 +100,14 @@ def _normalize_name(
     :param existing_data_getter: 既存のデータを取得する関数 (e.g., db_manager.get_items_by_user)
     :return: (is_new, suggested_id, suggested_name) のタプル
     """
+    # raw_name が None の場合、.lower() を呼び出すとエラーになるため、ここで処理を止める
+    if raw_name is None or not str(raw_name).strip():
+        # 新規と判定し、IDはNone、名称は空文字列として返す（または、元のraw_nameがNoneであればNoneを返す）
+        return (True, None, raw_name) 
+
+    # raw_name を文字列として扱い、前後の空白を除去
+    raw_name = str(raw_name).strip()
+    
     # データベースから既存のデータを取得
     existing_list = existing_data_getter(user_id)
 
@@ -181,8 +189,18 @@ def normalize_ocr_data(
     """
     OCR抽出データを正規化し、名寄せ結果（提案）を含むOCRResultスキーマを返す。
     """
+    if raw_store_name is None:
+        raw_store_name = ""
+        
+    if raw_item_name is None:
+        raw_item_name = ""
+    
+    # raw_purchase_date は既に None のチェックがあるが、
+    # _normalize_name の呼び出し側で str() されることを考えると、
+    # 他の raw データもここで安全を確保しておくと良い。
     if raw_purchase_date is None:
         raw_purchase_date = ""
+    
     # 日付の正規化
     normalized_date = _normalize_date(raw_purchase_date)
 
