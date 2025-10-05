@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 from datetime import date, datetime
 import re
 from rapidfuzz import fuzz  # 類似度計算ライブラリ
@@ -107,7 +107,7 @@ def _normalize_name(
         return (True, None, raw_name)
 
     # 名寄せ処理
-    best_match: Optional[Item | Store] = None
+    best_match: Optional[Union[Item, Store]] = None
     best_score = 0.0
 
     for entity in existing_list:
@@ -176,7 +176,7 @@ def normalize_ocr_data(
     raw_store_name: str,
     raw_item_name: str,
     raw_price: str,
-    raw_purchase_date: str | None,
+    raw_purchase_date: Optional[str],
 ) -> OCRResult:
     """
     OCR抽出データを正規化し、名寄せ結果（提案）を含むOCRResultスキーマを返す。
