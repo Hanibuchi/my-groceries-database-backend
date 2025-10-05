@@ -18,7 +18,7 @@ app = FastAPI(
 
 # --- 1. CORS (Cross-Origin Resource Sharing) の設定 ---
 # Next.js のフロントエンドからのアクセスを許可するために必須
-origins = settings.BACKEND_CORS_ORIGINS
+origins = [settings.BACKEND_CORS_ORIGIN]
 
 app.add_middleware(
     CORSMiddleware,
