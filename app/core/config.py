@@ -22,10 +22,14 @@ class Settings(BaseSettings):
     # 追記: JWTの検証アルゴリズム (Supabaseは通常 HS256)
     JWT_ALGORITHM: str = "HS256" # <- 追記
     
+    ENDPOINT: str
+    KEY: str
+
     class Config:
         # .envファイルから環境変数を読み込む設定
         env_file = ".env"
         # 追記: 環境変数が必須であることを明示
         case_sensitive = True # <- 追記 (Pydanticの推奨設定)
+
 
 settings = Settings()
