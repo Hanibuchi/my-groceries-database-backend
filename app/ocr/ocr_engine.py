@@ -8,7 +8,6 @@ import os
 from app.core.config import settings
 
 
-config = dotenv_values("app/ocr/.env")
 endpoint = settings.OCR_ENDPOINT
 key = settings.OCR_KEY
 
