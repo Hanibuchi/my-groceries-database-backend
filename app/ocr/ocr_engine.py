@@ -4,6 +4,7 @@ import json
 import re
 from dotenv import dotenv_values
 import os
+import tempfile
 
 
 config = dotenv_values("app/ocr/.env")
@@ -166,13 +167,31 @@ def parse_receipt_text(text):
         i += 1
     return items
 
-def process_image(image_path):
+def process_image(image_bytes):
     """
-    入力画像パスを受け取り、商品リストを抽出して返す関数
+    入力画像バイトデータを受け取り、一時ファイルに保存後、OCR処理を行い、商品リストを抽出して返す関数
     """
-    result_json = azure_receipt_ocr(image_path)
-    result = parse_receipt_result(result_json)
-    raw_data_list = parse_receipt_text(result.get("生データ", ""))
+    # 1. バイトデータを安全な一時ファイルに保存
+    # delete=False を指定して、withブロック終了後もファイルが残るようにし、
+    # finallyブロックで明示的に削除する
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        tmp_file.write(image_bytes)
+        image_path = tmp_file.name # 安全な一時ファイルパスを取得
+
+    raw_data_list = []
+    try:
+        # 2. 一時ファイルパスを使ってOCRを実行
+        result_json = azure_receipt_ocr(image_path)
+        
+        # 3. 解析
+        result = parse_receipt_result(result_json)
+        raw_data_list = parse_receipt_text(result.get("生データ", ""))
+        
+    finally:
+        # 4. 処理後、確実に一時ファイルを削除
+        if os.path.exists(image_path):
+            os.unlink(image_path)
+            
     return raw_data_list
 
 # 使い方例
