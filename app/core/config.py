@@ -9,10 +9,9 @@ class Settings(BaseSettings):
     VERSION: str = "0.0.0"
 
     # CORSオリジン設定
-    BACKEND_CORS_ORIGINS: list[str] = [
-        "http://localhost:3000",  # ここにフロントのデプロイ先のドメインを設定
-        "http://127.0.0.1:3000",
-    ]
+    BACKEND_CORS_ORIGINS: list[
+        str
+    ]  # 環境変数で設定。フロントのドメインとポートを設定する。
     UVICORN_HOST: str = "0.0.0.0"  # ここで空けておくホストを設定
     UVICORN_PORT: int = 8000  # これで空けておくポートを設定
 
